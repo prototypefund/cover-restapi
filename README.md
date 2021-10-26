@@ -1,5 +1,6 @@
 xml format is:
 
+'''xml
 <?xml version="1.0" ?>
 <coverage version="" timestamp="" lines-valid="" lines-covered="" line-rate="" branches-covered="" branches-valid="" branch-rate="" complexity="">
 	<sources>
@@ -18,3 +19,4 @@ xml format is:
 		</package>
 	</packages>
 </coverage>
+'''
