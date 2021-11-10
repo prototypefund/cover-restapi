@@ -1,0 +1,38 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Cover Rest
+  license:
+    name: MIT
+servers:
+  - url: https://cover-rest.gitlab.io/
+paths:
+  /api:
+    get:
+      summary: Default Api route
+      operationId: apiRoute
+      responses:
+        '200':
+          description: Ok
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+        required:
+          - code
+          - message
+        properties:
+          code:
+            type: integer
+          message:
+            type: string
