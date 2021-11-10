@@ -5,7 +5,6 @@ class XmlParse:
     def __init__(self, path):
         tree = ET.parse(path)
         root = tree.getroot()
-        # root attrib
         root_attrib = root.attrib
         self.version = root_attrib.get("version")
         self.timestamp = root_attrib.get("timestamp")
@@ -16,9 +15,7 @@ class XmlParse:
         self.branches_valid = root_attrib.get("branches-valid")
         self.branch_rate = root_attrib.get("branch-rate")
         self.complexity = root_attrib.get("complexity")
-        # sources
         self.sources = [SourceType(source) for source in root[0]]  # TODO not by index but by name
-        # packages
         self.packages = [PackageType(package) for package in root[1]]  # TODO not by index but by name
 
 
