@@ -18,14 +18,16 @@ class XmlParse:
         # self.branch_rate = root_attrib.get("branch-rate") # need calc
         # self.complexity = root_attrib.get("complexity") # is with in methode
         self.sessionInfo = []
-        for source in root_children:
-            if source.tag == "sessioninfo":
-                self.sessionInfo.append(SessionInfoType(source))
-
         self.packages = []
-        for package in root_children:
-            if package.tag == "package":
-                self.packages.append(PackageType(package))
+        self.counter = []
+        for child in root_children:
+            if child.tag == "sessioninfo":
+                self.sessionInfo.append(SessionInfoType(child))
+            elif child.tag == "package":
+                self.packages.append(PackageType(child))
+            # TODO handle counter types
+            elif child.tag == "counter":
+                self.counter.append(CounterType(child))
 
 
 class SessionInfoType:
@@ -35,41 +37,50 @@ class SessionInfoType:
         self.dump = sessionInfo.get("dump")
 
 
-class SourceType:
+class SourcefileType:
     def __init__(self, source):
+        self.name = source.attrib.get("name")
         self.lines = [LineType(line) for line in source]
 
 
 class PackageType:
     def __init__(self, package):
         package_attrib = package.attrib
-        self.name = package_attrib.get("name")
-        # self.line_rate = package_attrib.get("line-rate") # need calc
-        # self.branch_rate = package_attrib.get("branch-rate") # need calc
-        # self.complexity = package_attrib.get("complexity") # is with in methode
+        self.path = package_attrib.get("name")
+        self.line_rate = package_attrib.get("line-rate")   # TODO need from Counter
+        self.branch_rate = package_attrib.get("branch-rate")   # TODO need from Counter
+        self.complexity = package_attrib.get("complexity")   # TODO need from Counter
         self.classes = []
-        for _class in package:
-            if _class.tag == "class":
-                self.classes.append(ClassType(_class))
         self.sourcefiles = []
-        for sourcefile in package:
-            if sourcefile.tag == "sourcefile":
-                self.sourcefiles.append(SourceType(sourcefile))
+        self.counter = []
+        for child in package:
+            if child.tag == "class":
+                self.classes.append(ClassType(child))
+            elif child.tag == "sourcefile":
+                self.sourcefiles.append(SourcefileType(child))
+            # TODO handle counter types
+            elif child.tag == "counter":
+                self.counter.append(CounterType(child))
+
         # TODO still missing counter tag
 
 
 class ClassType:
     def __init__(self, _class):
         class_attrib = _class.attrib
-        self.name = class_attrib.get("name")
-        self.filename = class_attrib.get("filename")
-        self.complexity = class_attrib.get("complexity")
-        self.line_rate = class_attrib.get("line-rate")
-        self.branch_rate = class_attrib.get("branch-rate")
+        self.path = class_attrib.get("name")
+        self.filename = class_attrib.get("sourcefilename")
+        self.complexity = class_attrib.get("complexity")  # TODO need from Counter
+        self.line_rate = class_attrib.get("line-rate")  # TODO need from Counter
+        self.branch_rate = class_attrib.get("branch-rate")  # TODO need from Counter
         self.methods = []
-        for method in _class:
-            if method.tag == "method":
-                self.methods.append(MethodType(method))
+        self.counter = []
+        for child in _class:
+            if child.tag == "method":
+                self.methods.append(MethodType(child))
+            # TODO handle counter types
+            elif child.tag == "counter":
+                self.counter.append(CounterType(child))
         # self.lines = [LineType(line) for line in _class[1]] # with in methode
 
 
@@ -77,7 +88,13 @@ class MethodType:
     def __init__(self, method):
         method_attrib = method.attrib
         self.name = method_attrib.get("name")
-        self.desc = method_attrib.get("desc")
+        self.destination = method_attrib.get("desc")
+        self.line = method_attrib.get("line")
+        self.counter = []
+        for child in method:
+            # TODO handle counter types
+            if child.tag == "counter":
+                self.counter.append(CounterType(child))
 
 
 class LineType:
@@ -86,6 +103,14 @@ class LineType:
         # TODO not sure!!!
         self.number = line_attrib.get("nr")
         self.hits = line_attrib.get("ci")
+
+
+class CounterType:
+    def __init__(self, counter):
+        counter_attrib = counter.attrib
+        self.type = counter_attrib.get("type")
+        self.missed = counter_attrib.get("missed")
+        self.covered = counter_attrib.get("covered")
 
 
 if __name__ == "__main__":
