@@ -107,6 +107,15 @@ class MethodType:
         for child in method:
             # TODO handle counter types
             if child.tag == "counter":
+                _type = child.get("type")
+                if _type == "INSTRUCTION":
+                    pass
+                elif _type == "LINE":
+                    pass
+                elif _type == "COMPLEXITY":
+                    pass
+                elif _type == "METHOD":
+                    pass
                 self.counter.append(CounterType(child))
 
 
@@ -127,5 +136,8 @@ class CounterType:
 
 
 if __name__ == "__main__":
+    import time
+    start = time.time()
     dataType = XmlParse("../jacoco.xml")
+    print(f"executing took: {int((time.time() - start) * 1000)}ms")
     print("done")
