@@ -10,9 +10,9 @@ class XmlParse:
         self.name = root_attrib.get("name")
         # self.version = root_attrib.get("version") # dosen't exist
         # self.timestamp = root_attrib.get("timestamp") # dosen't exist
-        # self.lines_valid = root_attrib.get("lines-valid") # need calc
-        # self.lines_covered = root_attrib.get("lines-covered") # need calc
-        # self.line_rate = root_attrib.get("line-rate") # need calc
+        self.lines_valid = root_attrib.get("lines-valid")  # TODO need calc
+        self.lines_covered = root_attrib.get("lines-covered")  # TODO need calc
+        self.line_rate = root_attrib.get("line-rate")  # TODO need calc
         # self.branches_covered = root_attrib.get("branches-covered") # need calc
         # self.branches_valid = root_attrib.get("branches-valid")
         # self.branch_rate = root_attrib.get("branch-rate") # need calc
@@ -28,6 +28,19 @@ class XmlParse:
             # TODO handle counter types
             elif child.tag == "counter":
                 self.counter.append(CounterType(child))
+
+    def simple_report(self):
+        return {
+            "line-rate": self.line_rate,
+            "lines-valid": self.lines_valid,
+            "lines-covered": self.lines_covered,
+            "packages": [{"path": package.path,
+                          "line-rate": package.line_rate,
+                          "classes": [{"path": _class.path,
+                                       "line-rate": _class.line_rate,
+                                       } for _class in package.classes]}
+                         for package in self.packages]
+        }
 
 
 class SessionInfoType:

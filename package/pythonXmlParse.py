@@ -18,6 +18,19 @@ class XmlParse:
         self.sources = [SourceType(source) for source in root[0]]  # TODO not by index but by name
         self.packages = [PackageType(package) for package in root[1]]  # TODO not by index but by name
 
+    def simple_report(self):
+        return {
+            "line-rate": self.line_rate,
+            "lines-valid": self.lines_valid,
+            "lines-covered": self.lines_covered,
+            "packages": [{"path": package.path,
+                          "line-rate": package.line_rate,
+                          "classes": [{"path": _class.path,
+                                       "line-rate": _class.line_rate,
+                                       } for _class in package.classes]}
+                         for package in self.packages]
+        }
+
 
 class SourceType:
     def __init__(self, source):
@@ -27,7 +40,7 @@ class SourceType:
 class PackageType:
     def __init__(self, package):
         package_attrib = package.attrib
-        self.name = package_attrib.get("name")
+        self.path = package_attrib.get("name")
         self.line_rate = package_attrib.get("line-rate")
         self.branch_rate = package_attrib.get("branch-rate")
         self.complexity = package_attrib.get("complexity")
@@ -38,7 +51,7 @@ class ClassType:
     def __init__(self, _class):
         class_attrib = _class.attrib
         self.name = class_attrib.get("name")
-        self.filename = class_attrib.get("filename")
+        self.path = class_attrib.get("filename")
         self.complexity = class_attrib.get("complexity")
         self.line_rate = class_attrib.get("line-rate")
         self.branch_rate = class_attrib.get("branch-rate")
