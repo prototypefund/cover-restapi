@@ -1,0 +1,5 @@
+/.coverage
+/coverage.xml
+/jacoco.xml
+/test_coverage.xml
+/coverage_c.xml
