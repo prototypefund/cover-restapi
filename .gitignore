@@ -1,3 +1,8 @@
+*~
+*#
+/build
+cover_rest.egg-info/
+*.pyc
 /.coverage
 /coverage.xml
 /jacoco.xml
