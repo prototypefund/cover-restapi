@@ -20,3 +20,13 @@ xml format is:
 	</packages>
 </coverage>
 ```
+
+validate with: 
+```shell
+npx openapi-generator-cli validate cover-rest_api_spec_v1.yaml
+```
+
+generate with: 
+```shell
+npx openapi-generator-cli generate cover-rest_api_spec_v1.yaml
+```
