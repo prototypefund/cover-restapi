@@ -1,11 +1,10 @@
 import xml.etree.ElementTree as ET
+from collections import namedtuple
 if __name__ == "__main__":
     import time
-    # import memory_profiler
 
 
 class XmlParse:
-    # @memory_profiler.profile
     def __init__(self, path):
         tree = ET.parse(path)
         root = tree.getroot()
@@ -56,44 +55,37 @@ class SourceType:
         self.path = source.text
 
 
-class PackageType:
-    # @memory_profiler.profile
-    def __init__(self, package):
-        package_attrib = package.attrib
-        self.path = package_attrib.get("name")
-        self.line_rate = package_attrib.get("line-rate")
-        self.branch_rate = package_attrib.get("branch-rate")
-        self.complexity = package_attrib.get("complexity")
-        self.classes = []
-        for child in package:
-            if child.tag == "classes":
-                self.classes = [ClassType(_class) for _class in child]
+PackageTypeTuple = namedtuple('PackageType', 'path line_rate branch_rate complexity classes')
+ClassTypeTuple = namedtuple('classType', 'name path complexity line_rate branch_rate methods lines')
+LineTypeTuple = namedtuple('lineType', 'number hits')
 
 
-class ClassType:
-    # @memory_profiler.profile
-    def __init__(self, _class):
-        class_attrib = _class.attrib
-        self.name = class_attrib.get("name")
-        self.path = class_attrib.get("filename")
-        self.complexity = class_attrib.get("complexity")
-        self.line_rate = class_attrib.get("line-rate")
-        self.branch_rate = class_attrib.get("branch-rate")
-        self.methods = []
-        self.lines = []
-        for child in _class:
-            if child.tag == "method":
-                self.methods = [method for method in child]
-            elif child.tag == "lines":
-                self.lines = [LineType(line) for line in child]
+def PackageType(package) -> PackageTypeTuple:
+    package_attrib = package.attrib
+    classes = []
+    for child in package:
+        if child.tag == "classes":
+            classes = [ClassType(_class) for _class in child]
+    return PackageTypeTuple(package_attrib.get("name"), package_attrib.get("line-rate"),
+                            package_attrib.get("branch-rate"), package_attrib.get("complexity"), classes)
 
 
-class LineType:
-    # @memory_profiler.profile
-    def __init__(self, line):
-        line_attrib = line.attrib
-        self.number = line_attrib["number"]
-        self.hits = line_attrib["hits"]
+def ClassType(_class) -> ClassTypeTuple:
+    class_attrib = _class.attrib
+    methods = []
+    lines = []
+    for child in _class:
+        if child.tag == "method":
+            methods = [method for method in child]
+        elif child.tag == "lines":
+            lines = [LineType(line) for line in child]
+    return ClassTypeTuple(class_attrib.get("name"), class_attrib.get("filename"), class_attrib.get("complexity"),
+                          class_attrib.get("line-rate"), class_attrib.get("branch-rate"), methods, lines)
+
+
+def LineType(line) -> LineTypeTuple:
+    line_attrib = line.attrib
+    return LineTypeTuple(line_attrib.get("number"), line_attrib.get("hits"))
 
 
 if __name__ == "__main__":
