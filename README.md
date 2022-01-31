@@ -21,6 +21,15 @@ xml format is:
 </coverage>
 ```
 
+validate with: 
+```shell
+npx openapi-generator-cli validate cover-rest_api_spec_v1.yaml
+```
+
+generate with: 
+```shell
+npx openapi-generator-cli generate cover-rest_api_spec_v1.yaml
+```
 ## Running with Docker
 
 To run the server on a Docker container, please execute the following from the root directory:
