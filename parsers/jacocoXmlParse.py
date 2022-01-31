@@ -23,7 +23,7 @@ class XmlParse:
         for child in root_children:
             if child.tag == "sessioninfo":
                 self.sessionInfo.append(SessionInfoType(child))
-            elif child.tag == "package":
+            elif child.tag == "parsers":
                 self.packages.append(PackageType(child))
             # TODO handle counter types
             elif child.tag == "counter":

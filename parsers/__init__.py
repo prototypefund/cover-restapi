@@ -16,4 +16,4 @@ handler.setFormatter(logging.Formatter(
     "%Y-%m-%d %H:%M:%S"))
 logging.root.handlers = [handler]
 
-from package import routes
+from parsers import routes
