@@ -41,3 +41,8 @@ docker build -t openapi_server .
 # starting up a container
 docker run -p 8080:8080 openapi_server
 ```
+
+connect to server on
+```bash
+http://localhost:8080/Cover-Rest/Interface-API/1.0.6/
+```

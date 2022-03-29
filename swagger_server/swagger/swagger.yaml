@@ -1,0 +1,352 @@
+openapi: 3.0.0
+info:
+  title: Cover-Rest Interface API
+  description: This the Interface API for the Cover-Rest Project
+  version: 1.0.6
+servers:
+- url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.6
+  description: SwaggerHub API Auto Mocking
+- url: 0.0.0.0
+  description: Interface API for Cover
+tags:
+- name: write
+  description: modifies data from Database
+- name: read
+  description: read only from Database
+- name: parser
+  description: routes reserved for the parser
+paths:
+  /:
+    get:
+      summary: "default, for testing"
+      description: route for testing
+      operationId: root_get
+      responses:
+        "200":
+          description: OK
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /read_project/{projectID}:
+    get:
+      tags:
+      - read
+      summary: searches for project
+      description: |
+        read all Projects in the Database or by passing project id or ids
+        only those
+      operationId: read_project
+      parameters:
+      - name: projectID
+        in: path
+        description: get projects in database or project by id/ids
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: Project found in database
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectType'
+                x-content-type: application/json
+        "400":
+          description: bad input parameter
+      x-openapi-router-controller: swagger_server.controllers.read_controller
+  /write_project:
+    post:
+      tags:
+      - write
+      summary: adds an Project item
+      description: Adds an Project to the Database
+      operationId: write_project
+      parameters:
+      - name: overwrite
+        in: query
+        description: if Project Entry should be overwritten when it already exist
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      requestBody:
+        description: Project Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectType'
+      responses:
+        "201":
+          description: Project added
+        "400":
+          description: "invalid input, object invalid"
+        "409":
+          description: Project already exists
+      x-openapi-router-controller: swagger_server.controllers.write_controller
+  /{projectID}/read_commit:
+    get:
+      tags:
+      - read
+      summary: searches for commit in project
+      description: |
+        read all commit in project or by passing commit id or ids
+        only those
+      operationId: read_commit
+      parameters:
+      - name: projectID
+        in: path
+        description: get commits in project or commits in project by id/ids
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: query
+        description: pass commit id to get it
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: Commit found in database
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommitType'
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.read_controller
+  /{projectID}/write_commit:
+    post:
+      tags:
+      - write
+      summary: adds commit to database
+      description: Adds Commit to the Database
+      operationId: write_commit
+      parameters:
+      - name: projectID
+        in: path
+        description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: overwrite
+        in: query
+        description: if Commit Entry should be overwritten when it already exist
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      requestBody:
+        description: Commit Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitType'
+      responses:
+        "201":
+          description: Commit added
+        "400":
+          description: "invalid input, object invalid"
+        "409":
+          description: Commit already exist
+      x-openapi-router-controller: swagger_server.controllers.write_controller
+  /{projectID}/{commitID}/write_coverage:
+    post:
+      tags:
+      - write
+      - parser
+      summary: For Parser to write to DB
+      description: Route for Parser to write to DB
+      operationId: write_coverage
+      parameters:
+      - name: projectID
+        in: path
+        description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: path
+        description: pass commit id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: Commit Object
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Commit added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+        "400":
+          description: "invalid input, object invalid"
+        "409":
+          description: Commit already exist
+      x-openapi-router-controller: swagger_server.controllers.write_controller
+  /{projectID}/{commitID}/read_coverage/{coverageID}:
+    get:
+      tags:
+      - read
+      - parser
+      summary: returns coverage for the Parser
+      description: reads Coverage for the Parser
+      operationId: read_coverage
+      parameters:
+      - name: projectID
+        in: path
+        description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: path
+        description: pass commit id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: coverageID
+        in: path
+        description: pass coverage id to get it
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Coverage for Parser
+          content:
+            application/json:
+              schema:
+                type: object
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.read_controller
+  /{projectID}/{commitID}/{coverageID}/read_lines:
+    get:
+      tags:
+      - read
+      summary: returns lines from coverage
+      description: read lines from coverage
+      operationId: read_coverage_lines
+      parameters:
+      - name: projectID
+        in: path
+        description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: path
+        description: pass commit id to get it
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: coverageID
+        in: path
+        description: pass coverage id to get it
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Lines from Coverage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinesType'
+      x-openapi-router-controller: swagger_server.controllers.read_controller
+components:
+  schemas:
+    ProjectType:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          format: url
+          example: github.com/user/project
+        name:
+          type: string
+          example: Project Name
+      example:
+        name: Project Name
+        id: github.com/user/project
+    CommitType:
+      required:
+      - branch
+      - id
+      - message
+      type: object
+      properties:
+        id:
+          type: string
+          example: githash
+        message:
+          type: string
+          example: Commit message
+        branch:
+          type: string
+          example: testing
+      example:
+        id: githash
+        message: Commit message
+        branch: testing
+    LinesType:
+      required:
+      - lines
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            type: string
+      example:
+        lines:
+        - lines
+        - lines
+    inline_response_201:
+      type: object
+      properties:
+        id:
+          type: string
+          description: returns the coverageID
+      example:
+        id: id
+
