@@ -1,0 +1,288 @@
+openapi: 3.0.0
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.6
+  - description: Interface API for Cover
+    url: 0.0.0.0
+info:
+  description: This the Interface API for the Cover-Rest Project
+  version: 1.0.6
+  title: Cover-Rest Interface API
+tags:
+  - name: write
+    description: modifies data from Database
+  - name: read
+    description: read only from Database
+  - name: parser
+    description: routes reserved for the parser
+paths:
+  /read_project/{projectID}:
+    get:
+      tags:
+        - read
+      summary: searches for project
+      operationId: readProject
+      description: |
+        read all Projects in the Database or by passing project id or ids
+        only those
+      parameters:
+        - in: path
+          name: projectID
+          description: get projects in database or project by id/ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Project found in database
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectType'
+        '400':
+          description: bad input parameter
+  /write_project:
+    post:
+      tags:
+        - write
+      summary: adds an Project item
+      operationId: writeProject
+      description: Adds an Project to the Database
+      parameters:
+        - in: query
+          name: overwrite
+          description: if Project Entry should be overwritten when it already exist
+          explode: true
+          schema:
+            type: boolean
+      requestBody:
+        description: Project Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectType'
+      responses:
+        '201':
+          description: Project added
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: Project already exists
+  /{projectID}/read_commit:
+    get:
+      tags:
+        - read
+      summary: searches for commit in project
+      operationId: readCommit
+      description: |
+        read all commit in project or by passing commit id or ids
+        only those
+      parameters: 
+        - in: path
+          name: projectID
+          description: get commits in project or commits in project by id/ids
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: commitID
+          description: pass commit id to get it
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Commit found in database
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommitType'
+  /{projectID}/write_commit:
+    post:
+      tags:
+        - write
+      summary: adds commit to database
+      operationId: writeCommit
+      description: Adds Commit to the Database
+      parameters:
+        - in: path
+          name: projectID
+          description: pass project id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: overwrite
+          description: if Commit Entry should be overwritten when it already exist
+          explode: true
+          schema:
+            type: boolean
+      requestBody:
+        description: Commit Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitType'
+      responses:
+        '201':
+          description: Commit added
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: Commit already exist
+  /{projectID}/{commitID}/write_coverage:
+    post:
+      tags:
+        - write
+        - parser
+      summary: For Parser to write to DB
+      operationId: writeCoverage
+      description: Route for Parser to write to DB
+      parameters: 
+        - in: path
+          name: projectID
+          description: pass project id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commitID
+          description: pass commit id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Commit Object
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Commit added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: returns the coverageID
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: Commit already exist
+  /{projectID}/{commitID}/read_coverage/{coverageID}:
+    get:
+      tags: 
+        - read
+        - parser
+      summary: returns coverage for the Parser
+      operationId: readCoverage
+      description: reads Coverage for the Parser
+      parameters: 
+        - in: path
+          name: projectID
+          description: pass project id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commitID
+          description: pass commit id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: coverageID
+          description: pass coverage id to get it
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Coverage for Parser
+          content:
+            application/json:
+              schema:
+                type: object
+  /{projectID}/{commitID}/{coverageID}/read_lines:
+    get:
+      tags: 
+        - read
+      summary: returns lines from coverage
+      operationId: readCoverageLines
+      description: read lines from coverage
+      parameters: 
+        - in: path
+          name: projectID
+          description: pass project id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commitID
+          description: pass commit id to get it
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: coverageID
+          description: pass coverage id to get it
+          required: true
+          schema:
+              type: string
+      responses:
+        '200':
+          description: Lines from Coverage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinesType'
+components:
+  schemas:
+    ProjectType:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: url
+          example: github.com/user/project
+        name:
+          type: string
+          example: Project Name
+    CommitType:
+      type: object
+      required:
+        - id
+        - message
+        - branch
+      properties:
+        id:
+          type: string
+          example: githash
+        message:
+          type: string
+          example: Commit message
+        branch:
+          type: string
+          example: testing
+    LinesType:
+      type: object
+      required: 
+        - lines
+      properties:
+        lines:
+          type: array
+          items:
+            type: string
