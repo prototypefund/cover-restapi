@@ -2,17 +2,21 @@ openapi: 3.0.0
 info:
   title: Cover-Rest Interface API
   description: This the Interface API for the Cover-Rest Project
-  version: 1.0.6
+  version: 1.0.8
 servers:
-- url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.6
+- url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.8
   description: SwaggerHub API Auto Mocking
 - url: 0.0.0.0
   description: Interface API for Cover
 tags:
-- name: write
-  description: modifies data from Database
-- name: read
-  description: read only from Database
+- name: project
+  description: routes for project
+- name: commit
+  description: routes for commit
+- name: coverage
+  description: routes concerning raw coverage data
+- name: codeCognita
+  description: routes concerning code-cognita data
 - name: parser
   description: routes reserved for the parser
 paths:
@@ -28,7 +32,7 @@ paths:
   /read_project/{projectID}:
     get:
       tags:
-      - read
+      - project
       summary: searches for project
       description: |
         read all Projects in the Database or by passing project id or ids
@@ -57,11 +61,11 @@ paths:
                 x-content-type: application/json
         "400":
           description: bad input parameter
-      x-openapi-router-controller: swagger_server.controllers.read_controller
+      x-openapi-router-controller: swagger_server.controllers.project_controller
   /write_project:
     post:
       tags:
-      - write
+      - project
       summary: adds an Project item
       description: Adds an Project to the Database
       operationId: write_project
@@ -87,11 +91,11 @@ paths:
           description: "invalid input, object invalid"
         "409":
           description: Project already exists
-      x-openapi-router-controller: swagger_server.controllers.write_controller
+      x-openapi-router-controller: swagger_server.controllers.project_controller
   /{projectID}/read_commit:
     get:
       tags:
-      - read
+      - commit
       summary: searches for commit in project
       description: |
         read all commit in project or by passing commit id or ids
@@ -126,11 +130,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/CommitType'
                 x-content-type: application/json
-      x-openapi-router-controller: swagger_server.controllers.read_controller
+      x-openapi-router-controller: swagger_server.controllers.commit_controller
   /{projectID}/write_commit:
     post:
       tags:
-      - write
+      - commit
       summary: adds commit to database
       description: Adds Commit to the Database
       operationId: write_commit
@@ -164,11 +168,10 @@ paths:
           description: "invalid input, object invalid"
         "409":
           description: Commit already exist
-      x-openapi-router-controller: swagger_server.controllers.write_controller
+      x-openapi-router-controller: swagger_server.controllers.commit_controller
   /{projectID}/{commitID}/write_coverage:
     post:
       tags:
-      - write
       - parser
       summary: For Parser to write to DB
       description: Route for Parser to write to DB
@@ -195,7 +198,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/ParserFormat'
       responses:
         "201":
           description: Commit added
@@ -207,11 +210,10 @@ paths:
           description: "invalid input, object invalid"
         "409":
           description: Commit already exist
-      x-openapi-router-controller: swagger_server.controllers.write_controller
+      x-openapi-router-controller: swagger_server.controllers.parser_controller
   /{projectID}/{commitID}/read_coverage/{coverageID}:
     get:
       tags:
-      - read
       - parser
       summary: returns coverage for the Parser
       description: reads Coverage for the Parser
@@ -247,13 +249,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                x-content-type: application/json
-      x-openapi-router-controller: swagger_server.controllers.read_controller
+                $ref: '#/components/schemas/ParserFormat'
+      x-openapi-router-controller: swagger_server.controllers.parser_controller
   /{projectID}/{commitID}/{coverageID}/read_lines:
     get:
       tags:
-      - read
+      - coverage
       summary: returns lines from coverage
       description: read lines from coverage
       operationId: read_coverage_lines
@@ -288,8 +289,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LinesType'
-      x-openapi-router-controller: swagger_server.controllers.read_controller
+                type: array
+                items:
+                  $ref: '#/components/schemas/LineType'
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.coverage_controller
 components:
   schemas:
     ProjectType:
@@ -328,19 +332,243 @@ components:
         id: githash
         message: Commit message
         branch: testing
-    LinesType:
+    SourcesType:
       required:
-      - lines
+      - path
       type: object
       properties:
+        path:
+          type: string
+      example:
+        path: path
+    PackageType:
+      required:
+      - classes
+      - path
+      type: object
+      properties:
+        path:
+          type: string
+        line-rate:
+          type: integer
+        branch-rate:
+          type: integer
+        complexity:
+          type: integer
+        classes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassType'
+      example:
+        path: path
+        complexity: 2
+        classes:
+        - path: path
+          complexity: 4
+          methods:
+          - {}
+          - {}
+          name: name
+          line-rate: 7
+          branch-rate: 1
+          lines:
+          - hits: 1
+            path: path
+            number: 1
+          - hits: 1
+            path: path
+            number: 1
+        - path: path
+          complexity: 4
+          methods:
+          - {}
+          - {}
+          name: name
+          line-rate: 7
+          branch-rate: 1
+          lines:
+          - hits: 1
+            path: path
+            number: 1
+          - hits: 1
+            path: path
+            number: 1
+        line-rate: 9
+        branch-rate: 3
+    ClassType:
+      required:
+      - lines
+      - methods
+      - name
+      - path
+      type: object
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+        complexity:
+          type: integer
+        line-rate:
+          type: integer
+        branch-rate:
+          type: integer
+        methods:
+          type: array
+          items:
+            type: object
         lines:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/LineType'
       example:
+        path: path
+        complexity: 4
+        methods:
+        - {}
+        - {}
+        name: name
+        line-rate: 7
+        branch-rate: 1
         lines:
-        - lines
-        - lines
+        - hits: 1
+          path: path
+          number: 1
+        - hits: 1
+          path: path
+          number: 1
+    LineType:
+      required:
+      - hits
+      type: object
+      properties:
+        path:
+          type: string
+        number:
+          type: integer
+        hits:
+          type: integer
+      example:
+        hits: 1
+        path: path
+        number: 1
+    ParserFormat:
+      required:
+      - packages
+      - sources
+      - version
+      type: object
+      properties:
+        version:
+          type: string
+        timestamp:
+          type: string
+        lines-valid:
+          type: integer
+        lines-covered:
+          type: integer
+        line-rate:
+          type: integer
+        branches-covered:
+          type: integer
+        branches-valid:
+          type: integer
+        branch-rate:
+          type: integer
+        complexity:
+          type: integer
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourcesType'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageType'
+      example:
+        complexity: 7
+        lines-valid: 0
+        branches-covered: 5
+        sources:
+        - path: path
+        - path: path
+        line-rate: 1
+        branch-rate: 2
+        packages:
+        - path: path
+          complexity: 2
+          classes:
+          - path: path
+            complexity: 4
+            methods:
+            - {}
+            - {}
+            name: name
+            line-rate: 7
+            branch-rate: 1
+            lines:
+            - hits: 1
+              path: path
+              number: 1
+            - hits: 1
+              path: path
+              number: 1
+          - path: path
+            complexity: 4
+            methods:
+            - {}
+            - {}
+            name: name
+            line-rate: 7
+            branch-rate: 1
+            lines:
+            - hits: 1
+              path: path
+              number: 1
+            - hits: 1
+              path: path
+              number: 1
+          line-rate: 9
+          branch-rate: 3
+        - path: path
+          complexity: 2
+          classes:
+          - path: path
+            complexity: 4
+            methods:
+            - {}
+            - {}
+            name: name
+            line-rate: 7
+            branch-rate: 1
+            lines:
+            - hits: 1
+              path: path
+              number: 1
+            - hits: 1
+              path: path
+              number: 1
+          - path: path
+            complexity: 4
+            methods:
+            - {}
+            - {}
+            name: name
+            line-rate: 7
+            branch-rate: 1
+            lines:
+            - hits: 1
+              path: path
+              number: 1
+            - hits: 1
+              path: path
+              number: 1
+          line-rate: 9
+          branch-rate: 3
+        version: version
+        branches-valid: 5
+        lines-covered: 6
+        timestamp: timestamp
     inline_response_201:
       type: object
       properties:

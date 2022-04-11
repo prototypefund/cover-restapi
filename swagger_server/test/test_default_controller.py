@@ -17,7 +17,7 @@ class TestDefaultController(BaseTestCase):
         default, for testing
         """
         response = self.client.open(
-            '/Cover-Rest/Interface-API/1.0.6/',
+            '/Cover-Rest/Interface-API/1.0.8/',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
