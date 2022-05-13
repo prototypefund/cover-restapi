@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import requests
 import json
+import os.path
 from collections import namedtuple
 
 if __name__ == "__main__":
@@ -70,6 +71,56 @@ class XmlParse:
         headers = {'Content-type': 'application/json'}
         x = requests.post(_url, json=json.dumps(data), headers=headers)
         print(x.status_code)
+
+    def to_xml_file(self, _filename):
+        if not _filename.endswith('.xml'):
+            raise Exception("filename must end with .xml")
+        coverage = ET.Element("coverage", {
+            "version": self.version,
+            "timestamp": self.timestamp,
+            "lines-valid": self.lines_valid,
+            "lines-covered": self.lines_covered,
+            "line-rate": self.line_rate,
+            "branches-covered": self.branches_covered,
+            "branches-valid": self.branches_valid,
+            "branch-rate": self.branch_rate,
+            "complexity": self.complexity,
+        })
+
+        sources = ET.SubElement(coverage, "sources")
+        for source in self.sources:
+            ET.SubElement(sources, "source").text = source.path
+
+        packages = ET.SubElement(coverage, "packages")
+        for package in self.packages:
+            package_element = ET.SubElement(packages, "package", {
+                "name": package.path,
+                "line-rate": package.line_rate,
+                "branch-rate": package.branch_rate,
+                "complexity": package.complexity,
+            })
+
+            classes = ET.SubElement(package_element, "classes")
+            for _class in package.classes:
+                _class_element = ET.SubElement(classes, "class", {
+                    "name": _class.name,
+                    "filename": _class.path,
+                    "complexity": _class.complexity,
+                    "line-rate": _class.line_rate,
+                    "branch-rate": _class.branch_rate,
+                })
+
+                methods = ET.SubElement(_class_element, "methods")
+
+                lines = ET.SubElement(_class_element, "lines")
+                for line in _class.lines:
+                    line_element = ET.SubElement(lines, "line", {
+                        "number": line.number,
+                        "hits": line.hits,
+                    })
+
+        tree = ET.ElementTree(coverage)
+        tree.write(_filename, encoding="UTF-8", xml_declaration=True)
 
     def basic_report(self):
         return {
@@ -211,9 +262,11 @@ if __name__ == "__main__":
     print(f"executing took: {int((time.time() - start) * 1000)}ms")
     print(dataType.basic_report())
 
-    project_id = "test_project"
-    commit_id = "test_commit"
-    coverage_id = "test_coverage"
-    url = f'http://localhost:8080/Cover-Rest/Interface-API/1.0.9/{project_id}/{commit_id}/coverage/{coverage_id}'
+    # project_id = "test_project"
+    # commit_id = "test_commit"
+    # coverage_id = "test_coverage"
+    # url = f'http://localhost:8080/Cover-Rest/Interface-API/1.0.9/{project_id}/{commit_id}/coverage/{coverage_id}'
+    #
+    # dataType.to_api_db(url)
 
-    dataType.to_api_db(url)
+    dataType.to_xml_file("../coverage_reverse.xml")
