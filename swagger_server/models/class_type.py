@@ -15,7 +15,7 @@ class ClassType(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, path: str=None, name: str=None, complexity: int=None, line_rate: int=None, branch_rate: int=None, methods: List[object]=None, lines: List[LineType]=None):  # noqa: E501
+    def __init__(self, path: str=None, name: str=None, complexity: int=None, line_rate: int=None, branch_rate: int=None, lines: List[LineType]=None):  # noqa: E501
         """ClassType - a model defined in Swagger
 
         :param path: The path of this ClassType.  # noqa: E501
@@ -28,8 +28,6 @@ class ClassType(Model):
         :type line_rate: int
         :param branch_rate: The branch_rate of this ClassType.  # noqa: E501
         :type branch_rate: int
-        :param methods: The methods of this ClassType.  # noqa: E501
-        :type methods: List[object]
         :param lines: The lines of this ClassType.  # noqa: E501
         :type lines: List[LineType]
         """
@@ -39,7 +37,6 @@ class ClassType(Model):
             'complexity': int,
             'line_rate': int,
             'branch_rate': int,
-            'methods': List[object],
             'lines': List[LineType]
         }
 
@@ -49,7 +46,6 @@ class ClassType(Model):
             'complexity': 'complexity',
             'line_rate': 'line-rate',
             'branch_rate': 'branch-rate',
-            'methods': 'methods',
             'lines': 'lines'
         }
         self._path = path
@@ -57,7 +53,6 @@ class ClassType(Model):
         self._complexity = complexity
         self._line_rate = line_rate
         self._branch_rate = branch_rate
-        self._methods = methods
         self._lines = lines
 
     @classmethod
@@ -179,29 +174,6 @@ class ClassType(Model):
         """
 
         self._branch_rate = branch_rate
-
-    @property
-    def methods(self) -> List[object]:
-        """Gets the methods of this ClassType.
-
-
-        :return: The methods of this ClassType.
-        :rtype: List[object]
-        """
-        return self._methods
-
-    @methods.setter
-    def methods(self, methods: List[object]):
-        """Sets the methods of this ClassType.
-
-
-        :param methods: The methods of this ClassType.
-        :type methods: List[object]
-        """
-        if methods is None:
-            raise ValueError("Invalid value for `methods`, must not be `None`")  # noqa: E501
-
-        self._methods = methods
 
     @property
     def lines(self) -> List[LineType]:

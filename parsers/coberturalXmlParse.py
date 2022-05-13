@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
 
 class XmlParse:
+    # TODO from data to xml file
     def __init__(self, path=None, from_dict=None):
         if path:
             tree = ET.parse(path)
@@ -71,7 +72,7 @@ class XmlParse:
                                        "complexity": int(_class.complexity),
                                        "line-rate": int(_class.line_rate),
                                        "branch-rate": int(_class.branch_rate),
-                                       "methods": [],
+                                       # "methods": [],
                                        "lines": [{"number": int(line.number),
                                                   "hits": int(line.hits),
                                                   } for line in _class.lines]
@@ -164,8 +165,9 @@ if __name__ == "__main__":
     print("done")
     print(dataType.basic_report())
 
-    project_id = "TestProject"
-    commit_id = "TestCommit"
-    url = f'http://localhost:8080/Cover-Rest/Interface-API/1.0.8/{project_id}/{commit_id}/write_coverage'
+    project_id = "test_project"
+    commit_id = "test_commit"
+    coverage_id = "test_coverage"
+    url = f'http://localhost:8080/Cover-Rest/Interface-API/1.0.9/{project_id}/{commit_id}/coverage/{coverage_id}'
 
     dataType.to_api_db(url)

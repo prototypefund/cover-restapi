@@ -19,7 +19,7 @@ class TestParserController(BaseTestCase):
         returns coverage for the Parser
         """
         response = self.client.open(
-            '/Cover-Rest/Interface-API/1.0.8/{projectID}/{commitID}/read_coverage/{coverageID}'.format(project_id='project_id_example', commit_id='commit_id_example', coverage_id='coverage_id_example'),
+            '/Cover-Rest/Interface-API/1.0.9/{projectID}/{commitID}/coverage/{coverageID}'.format(project_id='project_id_example', commit_id='commit_id_example', coverage_id='coverage_id_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
@@ -31,7 +31,7 @@ class TestParserController(BaseTestCase):
         """
         body = ParserFormat()
         response = self.client.open(
-            '/Cover-Rest/Interface-API/1.0.8/{projectID}/{commitID}/write_coverage'.format(project_id='project_id_example', commit_id='commit_id_example'),
+            '/Cover-Rest/Interface-API/1.0.9/{projectID}/{commitID}/coverage/{coverageID}'.format(project_id='project_id_example', commit_id='commit_id_example', coverage_id='coverage_id_example'),
             method='POST',
             data=json.dumps(body),
             content_type='application/json')

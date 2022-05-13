@@ -2,9 +2,9 @@ openapi: 3.0.0
 info:
   title: Cover-Rest Interface API
   description: This the Interface API for the Cover-Rest Project
-  version: 1.0.8
+  version: 1.0.9
 servers:
-- url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.8
+- url: https://virtserver.swaggerhub.com/Cover-Rest/Interface-API/1.0.9
   description: SwaggerHub API Auto Mocking
 - url: 0.0.0.0
   description: Interface API for Cover
@@ -29,7 +29,23 @@ paths:
         "200":
           description: OK
       x-openapi-router-controller: swagger_server.controllers.default_controller
-  /read_project/{projectID}:
+    post:
+      summary: "default, for testing"
+      description: route for testing
+      operationId: root_post
+      requestBody:
+        description: Test Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectType'
+      responses:
+        "201":
+          description: Done
+        "400":
+          description: Failed
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /project/{projectID}:
     get:
       tags:
       - project
@@ -62,7 +78,6 @@ paths:
         "400":
           description: bad input parameter
       x-openapi-router-controller: swagger_server.controllers.project_controller
-  /write_project:
     post:
       tags:
       - project
@@ -70,6 +85,16 @@ paths:
       description: Adds an Project to the Database
       operationId: write_project
       parameters:
+      - name: projectID
+        in: path
+        description: get projects in database or project by id/ids
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
       - name: overwrite
         in: query
         description: if Project Entry should be overwritten when it already exist
@@ -83,7 +108,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProjectType'
+              $ref: '#/components/schemas/LineType'
       responses:
         "201":
           description: Project added
@@ -92,7 +117,7 @@ paths:
         "409":
           description: Project already exists
       x-openapi-router-controller: swagger_server.controllers.project_controller
-  /{projectID}/read_commit:
+  /{projectID}/commit/{commitID}:
     get:
       tags:
       - commit
@@ -111,15 +136,13 @@ paths:
         schema:
           type: string
       - name: commitID
-        in: query
-        description: pass commit id to get it
-        required: false
-        style: form
-        explode: true
+        in: path
+        description: pass commit id
+        required: true
+        style: simple
+        explode: false
         schema:
-          type: array
-          items:
-            type: string
+          type: string
       responses:
         "200":
           description: Commit found in database
@@ -131,7 +154,6 @@ paths:
                   $ref: '#/components/schemas/CommitType'
                 x-content-type: application/json
       x-openapi-router-controller: swagger_server.controllers.commit_controller
-  /{projectID}/write_commit:
     post:
       tags:
       - commit
@@ -142,6 +164,14 @@ paths:
       - name: projectID
         in: path
         description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: path
+        description: pass commit id
         required: true
         style: simple
         explode: false
@@ -169,49 +199,7 @@ paths:
         "409":
           description: Commit already exist
       x-openapi-router-controller: swagger_server.controllers.commit_controller
-  /{projectID}/{commitID}/write_coverage:
-    post:
-      tags:
-      - parser
-      summary: For Parser to write to DB
-      description: Route for Parser to write to DB
-      operationId: write_coverage
-      parameters:
-      - name: projectID
-        in: path
-        description: pass project id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      - name: commitID
-        in: path
-        description: pass commit id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      requestBody:
-        description: Commit Object
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ParserFormat'
-      responses:
-        "201":
-          description: Commit added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_201'
-        "400":
-          description: "invalid input, object invalid"
-        "409":
-          description: Commit already exist
-      x-openapi-router-controller: swagger_server.controllers.parser_controller
-  /{projectID}/{commitID}/read_coverage/{coverageID}:
+  /{projectID}/{commitID}/coverage/{coverageID}:
     get:
       tags:
       - parser
@@ -251,7 +239,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/ParserFormat'
       x-openapi-router-controller: swagger_server.controllers.parser_controller
-  /{projectID}/{commitID}/{coverageID}/read_lines:
+    post:
+      tags:
+      - parser
+      summary: For Parser to write to DB
+      description: Route for Parser to write to DB
+      operationId: write_coverage
+      parameters:
+      - name: projectID
+        in: path
+        description: pass project id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commitID
+        in: path
+        description: pass commit id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: coverageID
+        in: path
+        description: pass coverage id to get it
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: Commit Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParserFormat'
+      responses:
+        "201":
+          description: Commit added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+        "400":
+          description: "invalid input, object invalid"
+        "409":
+          description: Commit already exist
+      x-openapi-router-controller: swagger_server.controllers.parser_controller
+  /{projectID}/{commitID}/{coverageID}/lines:
     get:
       tags:
       - coverage
@@ -300,7 +337,6 @@ components:
       required:
       - id
       - name
-      type: object
       properties:
         id:
           type: string
@@ -317,7 +353,6 @@ components:
       - branch
       - id
       - message
-      type: object
       properties:
         id:
           type: string
@@ -335,7 +370,6 @@ components:
     SourcesType:
       required:
       - path
-      type: object
       properties:
         path:
           type: string
@@ -345,7 +379,6 @@ components:
       required:
       - classes
       - path
-      type: object
       properties:
         path:
           type: string
@@ -365,9 +398,6 @@ components:
         classes:
         - path: path
           complexity: 4
-          methods:
-          - {}
-          - {}
           name: name
           line-rate: 7
           branch-rate: 1
@@ -380,9 +410,6 @@ components:
             number: 1
         - path: path
           complexity: 4
-          methods:
-          - {}
-          - {}
           name: name
           line-rate: 7
           branch-rate: 1
@@ -398,10 +425,8 @@ components:
     ClassType:
       required:
       - lines
-      - methods
       - name
       - path
-      type: object
       properties:
         path:
           type: string
@@ -413,10 +438,6 @@ components:
           type: integer
         branch-rate:
           type: integer
-        methods:
-          type: array
-          items:
-            type: object
         lines:
           type: array
           items:
@@ -424,9 +445,6 @@ components:
       example:
         path: path
         complexity: 4
-        methods:
-        - {}
-        - {}
         name: name
         line-rate: 7
         branch-rate: 1
@@ -440,7 +458,6 @@ components:
     LineType:
       required:
       - hits
-      type: object
       properties:
         path:
           type: string
@@ -457,7 +474,6 @@ components:
       - packages
       - sources
       - version
-      type: object
       properties:
         version:
           type: string
@@ -500,9 +516,6 @@ components:
           classes:
           - path: path
             complexity: 4
-            methods:
-            - {}
-            - {}
             name: name
             line-rate: 7
             branch-rate: 1
@@ -515,9 +528,6 @@ components:
               number: 1
           - path: path
             complexity: 4
-            methods:
-            - {}
-            - {}
             name: name
             line-rate: 7
             branch-rate: 1
@@ -535,9 +545,6 @@ components:
           classes:
           - path: path
             complexity: 4
-            methods:
-            - {}
-            - {}
             name: name
             line-rate: 7
             branch-rate: 1
@@ -550,9 +557,6 @@ components:
               number: 1
           - path: path
             complexity: 4
-            methods:
-            - {}
-            - {}
             name: name
             line-rate: 7
             branch-rate: 1
