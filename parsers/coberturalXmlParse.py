@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import requests
 import json
 from collections import namedtuple
+
 if __name__ == "__main__":
     import time
 
@@ -9,7 +10,7 @@ if __name__ == "__main__":
 class XmlParse:
     # TODO from data to xml file
     def __init__(self, path=None, from_dict=None):
-        if path:
+        if path is not None:
             tree = ET.parse(path)
             root = tree.getroot()
             root_attrib = root.attrib
@@ -26,10 +27,10 @@ class XmlParse:
             self.packages = []
             for child in root:
                 if child.tag == "sources":
-                    self.sources = [SourceType(source) for source in root[0]]
+                    self.sources = [SourceType(source=source) for source in root[0]]
                 elif child.tag == "packages":
-                    self.packages = [PackageType(package) for package in root[1]]
-        elif from_dict:
+                    self.packages = [PackageType(package=package) for package in root[1]]
+        elif from_dict is not None:
             try:
                 from_dict = dict(from_dict)
                 self.version = from_dict.get("version")
@@ -41,8 +42,8 @@ class XmlParse:
                 self.branches_valid = from_dict.get("branches-valid")
                 self.branch_rate = from_dict.get("branch-rate")
                 self.complexity = from_dict.get("complexity")
-                self.sources = from_dict.get("sources")  # TODO convert to Types
-                self.packages = from_dict.get("packages")  # TODO convert to Types
+                self.sources = [SourceType(from_dict=source) for source in from_dict.get("sources")]
+                self.packages = [PackageType(from_dict=package) for package in from_dict.get("packages")]
             except Exception as e:
                 print(e)
                 raise Exception("error at from_dict failed initialize XMLParse")
@@ -61,30 +62,13 @@ class XmlParse:
             "branch-rate": int(self.branch_rate),
             "complexity": int(self.complexity),
             "sources": [source.to_dict() for source in self.sources],
-            "packages": [{# "path": package.path,
-                          "path": "test path",
-                          "line-rate": int(package.line_rate),
-                          "branch-rate": int(package.branch_rate),
-                          "complexity": int(package.complexity),
-                          "classes": [{# "path": _class.path,
-                                       "path": "test path",
-                                       "name": _class.name,
-                                       "complexity": int(_class.complexity),
-                                       "line-rate": int(_class.line_rate),
-                                       "branch-rate": int(_class.branch_rate),
-                                       # "methods": [],
-                                       "lines": [{"number": int(line.number),
-                                                  "hits": int(line.hits),
-                                                  } for line in _class.lines]
-                                       } for _class in package.classes],
-                          } for package in self.packages],
+            "packages": [package.to_dict() for package in self.packages],
         }
 
-    def to_api_db(self, url):
+    def to_api_db(self, _url):
         data = self.to_dict()
-        print(data)
         headers = {'Content-type': 'application/json'}
-        x = requests.post(url, json=json.dumps(data), headers=headers)
+        x = requests.post(_url, json=json.dumps(data), headers=headers)
         print(x.status_code)
 
     def basic_report(self):
@@ -111,48 +95,111 @@ class XmlParse:
 
 
 class SourceType:
-    # @memory_profiler.profile
-    def __init__(self, source):
-        self.path = source.text
+    def __init__(self, source=None, from_dict=None):
+        if source is not None:
+            self.path = source.text
+        elif from_dict is not None:
+            self.path = from_dict.get('path')
+        else:
+            raise Exception("need source or from_dict to initialize SourceType")
 
     def to_dict(self):
         return {
-            # "path": self.path,
-            "path": "test path",
+            "path": self.path,
         }
 
 
-PackageTypeTuple = namedtuple('PackageType', 'path line_rate branch_rate complexity classes')
-ClassTypeTuple = namedtuple('classType', 'name path complexity line_rate branch_rate methods lines')
-LineTypeTuple = namedtuple('lineType', 'number hits')
+class PackageType:
+    def __init__(self, package=None, from_dict=None):
+        if package is not None:
+            package_attrib = package.attrib
+            classes = []
+            for child in package:
+                if child.tag == "classes":
+                    classes = [ClassType(_class=_class) for _class in child]
+            self.path = package_attrib.get("name")
+            self.line_rate = package_attrib.get("line-rate")
+            self.branch_rate = package_attrib.get("branch-rate")
+            self.complexity = package_attrib.get("complexity")
+            self.classes = classes
+        elif from_dict is not None:
+            from_dict = dict(from_dict)
+            self.path = from_dict.get("path")
+            self.line_rate = from_dict.get("line-rate")
+            self.branch_rate = from_dict.get("branch-rate")
+            self.complexity = from_dict.get("complexity")
+            self.classes = from_dict.get("classes")
+        else:
+            raise Exception("need package or from_dict to initialize PackageType")
+
+    def to_dict(self):
+        return {
+            "path": self.path,
+            "line-rate": int(self.line_rate),
+            "branch-rate": int(self.branch_rate),
+            "complexity": int(self.complexity),
+            "classes": [_class.to_dict() for _class in self.classes]
+        }
 
 
-def PackageType(package) -> PackageTypeTuple:
-    package_attrib = package.attrib
-    classes = []
-    for child in package:
-        if child.tag == "classes":
-            classes = [ClassType(_class) for _class in child]
-    return PackageTypeTuple(package_attrib.get("name"), package_attrib.get("line-rate"),
-                            package_attrib.get("branch-rate"), package_attrib.get("complexity"), classes)
+class ClassType:
+    def __init__(self, _class=None, from_dict=None):
+        if _class is not None:
+            class_attrib = _class.attrib
+            methods = []
+            lines = []
+            for child in _class:
+                if child.tag == "method":
+                    methods = [method for method in child]
+                elif child.tag == "lines":
+                    lines = [LineType(line=line) for line in child]
+            self.name = class_attrib.get("name")
+            self.path = class_attrib.get("filename")
+            self.complexity = class_attrib.get("complexity")
+            self.line_rate = class_attrib.get("line-rate")
+            self.branch_rate = class_attrib.get("branch-rate")
+            self.methods = methods
+            self.lines = lines
+        elif from_dict is not None:
+            from_dict = dict(from_dict)
+            self.name = from_dict.get("name")
+            self.path = from_dict.get("filename")
+            self.complexity = from_dict.get("complexity")
+            self.line_rate = from_dict.get("line-rate")
+            self.branch_rate = from_dict.get("branch-rate")
+            self.methods = from_dict.get("methods")
+            self.lines = from_dict.get("lines")
+        else:
+            raise Exception("need _class or from_dict to initialize ClassType")
+
+    def to_dict(self):
+        return {"name": self.name,
+                "path": self.path,
+                "complexity": int(self.complexity),
+                "line-rate": int(self.line_rate),
+                "branch-rate": int(self.branch_rate),
+                # "methods": [],
+                "lines": [line.to_dict() for line in self.lines]
+                }
 
 
-def ClassType(_class) -> ClassTypeTuple:
-    class_attrib = _class.attrib
-    methods = []
-    lines = []
-    for child in _class:
-        if child.tag == "method":
-            methods = [method for method in child]
-        elif child.tag == "lines":
-            lines = [LineType(line) for line in child]
-    return ClassTypeTuple(class_attrib.get("name"), class_attrib.get("filename"), class_attrib.get("complexity"),
-                          class_attrib.get("line-rate"), class_attrib.get("branch-rate"), methods, lines)
+class LineType:
+    def __init__(self, line=None, from_dict=None):
+        if line is not None:
+            line_attrib = line.attrib
+            self.number = line_attrib.get("number")
+            self.hits = line_attrib.get("hits")
+        elif from_dict is not None:
+            from_dict = dict(from_dict)
+            self.number = from_dict.get("number")
+            self.hits = from_dict.get("hits")
+        else:
+            raise Exception("need line or from_dict to initialize LineType")
 
-
-def LineType(line) -> LineTypeTuple:
-    line_attrib = line.attrib
-    return LineTypeTuple(line_attrib.get("number"), line_attrib.get("hits"))
+    def to_dict(self):
+        return {"number": self.number,
+                "hits": self.hits,
+                }
 
 
 if __name__ == "__main__":
@@ -161,8 +208,7 @@ if __name__ == "__main__":
     filename = "../coverage.xml"
     print(f"report for: {filename}")
     dataType = XmlParse(filename)
-    print(f"executing took: {int((time.time() - start)*1000)}ms")
-    print("done")
+    print(f"executing took: {int((time.time() - start) * 1000)}ms")
     print(dataType.basic_report())
 
     project_id = "test_project"
